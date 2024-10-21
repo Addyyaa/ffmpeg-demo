@@ -1,38 +1,83 @@
+
+
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
     color: #333;
     margin: 0;
     padding: 20px;
+    display: flex; /* 使用 Flexbox */
+    justify-content: center; /* 水平居中 */
+    align-items: center; /* 垂直居中 */
+    height: 100%; /* 让 body 的高度为视口高度 */
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* justify-content: center; */
+    height: 100vh;
+    width: 50vw;
 }
 
 h1 {
-    text-align: center;
     color: #007BFF;
+    text-align: center;
+    margin: 10px 0;
 }
 
-#upload {
+button {
+    margin: 20px 0; /* 增加按钮的上下间距 */
+}
+
+input[type="file"] {
+    margin-bottom: 20px; /* 确保文件选择框和按钮之间有足够间距 */
+    display: block; /* 确保输入框单独占据一行 */
+}
+
+video {
+    margin-top: 20px; /* 视频元素上方增加间距 */
+    max-width: 100%;
     display: block;
-    margin: 20px auto;
+    position: relative; /* 使内部元素能够相对于此元素定位 */
+    z-index: 1; /* 设置视频层在进度条之上 */
+}
+
+button, input[type="file"] {
+
+    display: flex; /* 按钮和输入框占据一整行 */
+    margin: 20px auto; /* 上下间距 */
     padding: 10px;
     font-size: 16px;
-}
-
-#cropBtn {
-    display: block;
-    margin: 20px auto;
-    padding: 10px 20px;
-    font-size: 16px;
+    width: 100%; /* 自适应宽度 */
+    max-width: 200px; /* 最大宽度限制 */
     background-color: #007BFF;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
+    flex-direction: column;
+    align-items: center;
+    align-items: center;
 }
 
-#cropBtn:hover {
-    background-color: #0056b3;
+.upload-btn {
+    display: inline-block;
+    margin: 20px;
+    font-size: 14px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    justify-content: center; /* 水平居中 */
+    align-items: center;     /* 垂直居中 */
+}
+
+button:hover {
+    background-color: #0056b3; /* 悬停效果 */
 }
 
 #outputVideo {
@@ -41,4 +86,33 @@ h1 {
     max-width: 100%;
     border: 2px solid #007BFF;
     border-radius: 5px;
+    z-index: 2; /* 设置进度条层在视频之下 */
 }
+
+progress {
+    display: block;
+    margin: 20px auto;
+    width: 100%;
+    appearance: none;
+    background-color: #f4f4f4; /* 背景色 */
+    position: relative;
+}
+
+progress::-webkit-progress-bar {
+    background: #f4f4f4; /* 背景颜色 */
+}
+
+progress::-webkit-progress-value {
+    background: linear-gradient(to right, rgba(0, 255, 0, 0.5), rgba(0, 128, 0, 1)); /* 渐变色 */
+}
+
+progress::-moz-progress-bar {
+    background: linear-gradient(to right, rgba(0, 255, 0, 0.5), rgba(0, 128, 0, 1)); /* 渐变色 */
+}
+
+.video_frame {
+    padding-top: 20px;
+    width: 50vw;
+    aspect-ratio: 16 / 10;
+}
+
