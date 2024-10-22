@@ -37,7 +37,6 @@ input[type="file"] {
 }
 
 video {
-    margin-top: 20px; /* 视频元素上方增加间距 */
     max-width: 100%;
     display: block;
     position: relative; /* 使内部元素能够相对于此元素定位 */
@@ -111,8 +110,95 @@ progress::-moz-progress-bar {
 }
 
 .video_frame {
+    position: relative; /* 视频容器相对定位 */
     padding-top: 20px;
     width: 50vw;
     aspect-ratio: 16 / 10;
 }
 
+
+.crop-options{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.crop-box {
+    /* position: absolute; 裁剪框绝对定位在视频上 */
+    border: 2px dashed #007BFF;
+    cursor: move;
+    resize: both;
+    z-index: 1; /* 设置裁剪框层在视频层之上 */
+}
+
+.crop-options.custom-buttons .aspect-16-10,
+.crop-options.custom-buttons .aspect-10-16,
+.crop-options.custom-buttons .aspect-16-9,
+.crop-options.custom-buttons .aspect-9-16,
+.crop-options.custom-buttons .aspect-4-3,
+.crop-options.custom-buttons .aspect-3-4,
+.crop-options.custom-buttons .aspect-1-1,
+.crop-options.custom-buttons .aspect-自由裁剪 {
+    position: relative;
+    display: inline-block;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    cursor: pointer;
+}
+
+/* 特定于该类的伪元素样式 */
+.crop-options.custom-buttons button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 1px solid #ccc;
+    z-index: -1;
+}
+
+/* 根据不同的宽高比设置伪元素的尺寸 */
+.crop-options.custom-buttons .aspect-16-10::before {
+    padding-bottom: 62.5%; /* 400 / 640 */
+}
+
+.crop-options.custom-buttons .aspect-10-16::before {
+    padding-bottom: 160%; /* 640 / 400 */
+}
+
+.crop-options.custom-buttons .aspect-16-9::before {
+    padding-bottom: 56.25%; /* 360 / 640 */
+}
+
+.crop-options.custom-buttons .aspect-9-16::before {
+    padding-bottom: 177.78%; /* 640 / 360 */
+}
+
+.crop-options.custom-buttons .aspect-4-3::before {
+    padding-bottom: 75%; /* 480 / 640 */
+}
+
+.crop-options.custom-buttons .aspect-3-4::before {
+    padding-bottom: 133.33%; /* 640 / 480 */
+}
+
+.crop-options.custom-buttons .aspect-1-1::before {
+    padding-bottom: 100%; /* 480 / 480 */
+}
+
+/* 自由裁剪按钮的样式 */
+.crop-options.custom-buttons .aspect-自由裁剪::before {
+    padding-bottom: 100%; /* 默认比例 */
+    background-color: #eee;
+}
+
+.video-player {
+    display: inline;
+}
+
+.progress_text{
+    display: flex;
+    justify-content: flex-start;
+}
