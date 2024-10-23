@@ -168,10 +168,10 @@ function VideoTranscoder() {
         } else {
             const offsetX = e.clientX - cropBox.x;
             const offsetY = e.clientY - cropBox.y;
-    
+            
             const handleMouseMove = (moveEvent) => {
                 const containerRect = videoContainerRef.current.getBoundingClientRect();
-    
+                console.log(containerRect.width, containerRect.height);
                 const newX = Math.max(0, Math.min(moveEvent.clientX - offsetX, containerRect.width - cropBox.width));
                 const newY = Math.max(0, Math.min(moveEvent.clientY - offsetY, containerRect.height - cropBox.height));
     
@@ -232,7 +232,7 @@ function VideoTranscoder() {
             const aspectRatio = initialWidth / initialHeight;
             let newWidth = initialWidth + deltaX;
             let newHeight = newWidth / aspectRatio;
-    
+            console.log(containerRect.height, containerRect.width);
             // 如果新的高度超出容器高度，限制高度并重新计算宽度
             if (cropBox.y + newHeight > containerRect.height) {
                 newHeight = containerRect.height - cropBox.y;
@@ -291,6 +291,7 @@ function VideoTranscoder() {
             ) : (
                 <>
                     <h2>组件已加载</h2>
+                    <label htmlFor="upload">上传视频文件</label>
                     <input
                         type="file"
                         id="upload"
@@ -321,9 +322,9 @@ function VideoTranscoder() {
                     </div>
                     
     
-                    <div ref={videoContainerRef} style={{ position: 'relative', width: '100%', height: 'auto' }}>
+                    <div ref={videoContainerRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
                         {/* 视频标签 */}
-                        <video ref={videoRef} controls className="video-player" style={{ width: '100%', height: 'auto' }} />
+                        <video ref={videoRef} controls className="video-player" style={{ width: '100%', height: '100%' }} />
     
                         {/* 裁剪框 */}
                         {cropBox && (

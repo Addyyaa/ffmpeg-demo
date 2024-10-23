@@ -1,5 +1,5 @@
 const path = require('path');
-
+const serverMiddleware = require('./src/serverMiddleware.js');
 module.exports = {
     mode: 'development',
     entry: {
@@ -32,6 +32,11 @@ module.exports = {
         static: path.resolve(__dirname, 'public'), // 指定静态文件目录
         port: 8080,
         hot: true,
+        setupMiddlewares: (middlewares, devServer) => {
+            return [...middlewares, serverMiddleware];
+        },
+        open: true,
+        compress: true,
         historyApiFallback: true, // 处理 SPA 路由
     },
 };
