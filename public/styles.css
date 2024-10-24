@@ -202,3 +202,8 @@ progress::-moz-progress-bar {
     display: flex;
     justify-content: flex-start;
 }
+
+.crop-container{
+    display: inline;
+    padding-right: 1px;
+}

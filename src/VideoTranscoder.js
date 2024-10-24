@@ -2,17 +2,28 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 
+/*************  ✨ Codeium AI 建议  *************/
+/**
+ * 一个用于视频转码的React函数组件。
+ * 
+ * 该组件允许用户上传视频文件，选择裁剪比例，
+ * 并使用FFmpeg对视频进行转码。
+ * 
+ * @return {JSX.Element} 表示视频转码器组件的JSX元素
+ */
+/****  bot-b85ceea4-25a9-46ab-8e22-9be04a2e8912  *****/
 function VideoTranscoder() {
     const [loaded, setLoaded] = useState(false);
     const [progress, setProgress] = useState(0);
     const [cropParams, setCropParams] = useState('crop=1280:720:0:0'); // 默认裁剪参数
-    const [cropBox, setCropBox] = useState({ x: 0, y: 0, width: 1280, height: 720 });
+    const [cropBox, setCropBox] = useState({ x: 0, y: 0, width: 100, height: 100});
     const ffmpegRef = useRef(new FFmpeg());
     const videoRef = useRef(null);
     const messageRef = useRef(null);
     const loadingRef = useRef(null);
     const videoContainerRef = useRef(null); // 视频容器的引用
     const [isResizing, setIsResizing] = useState(false); // 新增状态标识
+    const [isDragging, setIsDragging] = useState(false);
 
     const toBlobURL = async (url, type) => {
         const response = await fetch(url);
@@ -32,6 +43,14 @@ function VideoTranscoder() {
         "自由裁剪": "自由裁剪参数"
     };
 
+/*************  ✨ Codeium AI Suggestion  *************/
+    /**
+     * 异步加载 FFmpeg 核心，并设置加载进度。
+     *
+     * @async
+     * @return {Promise<void>}
+     */
+/****  bot-c71b465a-a73c-40d4-b35b-c59ab9426866  *****/
     const load = async () => {
         try {
             console.log("开始加载 FFmpeg 核心...");
@@ -48,6 +67,14 @@ function VideoTranscoder() {
         }
     };
 
+/*************  ✨ Codeium AI Suggestion  *************/
+    /**
+     * 异步执行视频转码，包括检查视频文件、裁剪区域、执行转码和更新进度。
+     *
+     * @async
+     * @return {Promise<void>}
+     */
+/****  bot-412a3d9e-b2b9-4690-9fbd-2de799c70dec  *****/
     const transcode = async () => {
         const ffmpeg = ffmpegRef.current;
         const upload = document.getElementById('upload');
@@ -93,11 +120,27 @@ function VideoTranscoder() {
         setCropBox({ x: 0, y: 0, width: 0, height: 0 });
     };
 
+/*************  ✨ Codeium AI 建议  *************/
+    /**
+     * 根据给定的进度值更新进度条颜色。
+     *
+     * @param {number} progress - 范围在0到1之间的进度值。
+     * @return {string} 以字符串形式表示的RGB颜色值。
+     */
+/****  bot-1693e943-4216-4b4a-bd46-7246754af103  *****/
     const updateProgressBarColor = (progress) => {
         const greenValue = Math.floor(progress * 255);// 计算绿色值
         return `rgb(0, ${greenValue}, 0)`;
     };
 
+/*************  ✨ Codeium AI 建议  *************/
+    /**
+     * 为视频选择裁剪比例，并相应地更新裁剪框。
+     *
+     * @param {string} option - 选定的裁剪比例（例如："16:10", "1:1", "自由裁剪"）
+     * @return {void}
+     */
+/****  bot-0394ff2d-88b6-4c1e-8676-b0c0bd738ce9  *****/
     const selectCrop = (option) => {
         const video = videoRef.current;
         const videoRect = video.getBoundingClientRect(); // 获取视频的宽高
@@ -162,6 +205,7 @@ function VideoTranscoder() {
 
     // 监听鼠标按下，允许裁剪框的移动
     const handleMouseDown = (e) => {
+        setIsDragging(true);
         if (e.target.className.includes('resize-handle')) {
             e.preventDefault(); // 防止文本选择
             document.addEventListener('mousemove', handleResize);
@@ -169,6 +213,14 @@ function VideoTranscoder() {
             const offsetX = e.clientX - cropBox.x;
             const offsetY = e.clientY - cropBox.y;
             
+/*************  ✨ Codeium AI 建议  *************/
+            /**
+             * 根据鼠标移动更新裁剪框的位置。
+             *
+             * @param {MouseEvent} moveEvent - 鼠标移动事件。
+             * @return {void}
+             */
+/****  bot-338e1a15-0b1a-4b8a-a01c-9950b424db59  *****/
             const handleMouseMove = (moveEvent) => {
                 const containerRect = videoContainerRef.current.getBoundingClientRect();
                 console.log(containerRect.width, containerRect.height);
@@ -182,6 +234,13 @@ function VideoTranscoder() {
                 }));
             };
     
+/*************  ✨ Codeium AI 建议  *************/
+            /**
+             * 移除鼠标移动和鼠标释放的事件监听器。
+             *
+             * @return {void}
+             */
+/****  bot-ebdb87d3-afee-4357-a3aa-56e515d28777  *****/
             const handleMouseUp = () => {
                 document.removeEventListener('mousemove', handleMouseMove);
                 document.removeEventListener('mouseup', handleMouseUp);
@@ -195,6 +254,14 @@ function VideoTranscoder() {
     
     
 
+/*************  ✨ Codeium AI 建议  *************/
+    /**
+     * 根据鼠标移动事件更新裁剪框的宽度和高度。
+     *
+     * @param {MouseEvent} moveEvent - 鼠标移动事件。
+     * @return {void}
+     */
+/****  bot-28184203-86d9-4bfc-a752-b020f2e2149c  *****/
     const handleMouseMoveResize = (moveEvent) => {
         const containerRect = videoContainerRef.current.getBoundingClientRect();
         const aspectRatio = cropBox.width / cropBox.height;
@@ -222,6 +289,7 @@ function VideoTranscoder() {
         const startY = e.clientY;
         const initialWidth = cropBox.width;
         const initialHeight = cropBox.height;
+        const aspectRatio = initialWidth / initialHeight;
     
         const handleMouseMove = (moveEvent) => {
             const containerRect = videoContainerRef.current.getBoundingClientRect();
@@ -257,6 +325,13 @@ function VideoTranscoder() {
             }));
         };
     
+/*************  ✨ Codeium AI 建议  *************/
+        /**
+         * 移除鼠标移动和鼠标释放的事件监听器。
+         *
+         * @return {void}
+         */
+/****  bot-557bc313-c89e-4fb5-b581-7e0b2d92780e  *****/
         const handleMouseUp = () => {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
@@ -272,6 +347,14 @@ function VideoTranscoder() {
     
     
 
+/*************  ✨ Codeium AI Suggestion  *************/
+    /**
+     * 处理文件选择事件，更新视频源并重新加载视频。
+     *
+     * @param {Event} event - 文件选择事件
+     * @return {void}
+     */
+/****  bot-32ddae10-6912-4160-b373-6858a7cb83a1  *****/
     const handleFileSelect = (event) => {
         const file = event.target.files[0];
         if (file) {
