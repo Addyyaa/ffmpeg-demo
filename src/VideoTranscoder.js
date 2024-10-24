@@ -24,6 +24,9 @@ function VideoTranscoder() {
     const videoContainerRef = useRef(null); // 视频容器的引用
     const [isResizing, setIsResizing] = useState(false); // 新增状态标识
     const [isDragging, setIsDragging] = useState(false);
+    const [isVideoSelected, setIsVideoSelected] = useState(false);
+    const saveButton = document.getElementById('saveButton');
+
 
     const toBlobURL = async (url, type) => {
         const response = await fetch(url);
@@ -33,24 +36,22 @@ function VideoTranscoder() {
 
     // 裁剪比例配置
     const cropOptions = {
-        "16:10": "crop=640:400:10:10",
-        "10:16": "crop=400:640:10:10",
-        "16:9": "crop=640:360:10:10",
-        "9:16": "crop=360:640:10:10",
-        "4:3": "crop=640:480:10:10",
-        "3:4": "crop=480:640:10:10",
-        "1:1": "crop=480:480:10:10",
+        "16:10": "crop=1152:720:10:10",
+        "10:16": "crop=720:1152:10:10",
+        "16:9": "crop=1280:720:10:10",
+        "9:16": "crop=720:1280:10:10",
+        "4:3": "crop=960:720:10:10",
+        "3:4": "crop=720:960:10:10",
+        "1:1": "crop=720:720:10:10",
         "自由裁剪": "自由裁剪参数"
     };
 
-/*************  ✨ Codeium AI Suggestion  *************/
     /**
      * 异步加载 FFmpeg 核心，并设置加载进度。
      *
      * @async
      * @return {Promise<void>}
      */
-/****  bot-c71b465a-a73c-40d4-b35b-c59ab9426866  *****/
     const load = async () => {
         try {
             console.log("开始加载 FFmpeg 核心...");
@@ -67,30 +68,18 @@ function VideoTranscoder() {
         }
     };
 
-/*************  ✨ Codeium AI Suggestion  *************/
     /**
      * 异步执行视频转码，包括检查视频文件、裁剪区域、执行转码和更新进度。
      *
      * @async
      * @return {Promise<void>}
      */
-/****  bot-412a3d9e-b2b9-4690-9fbd-2de799c70dec  *****/
     const transcode = async () => {
         const ffmpeg = ffmpegRef.current;
         const upload = document.getElementById('upload');
         
         if (upload.files.length === 0) {
             alert("请先上传一个视频文件。");
-            return;
-        }
-        // 获取视频的实际宽高
-        const video = videoRef.current;
-        const videoRect = video.getBoundingClientRect();
-        const { width: videoWidth, height: videoHeight } = videoRect;
-
-        // 检查裁剪框是否超出视频区域
-        if (cropBox.x < 0 || cropBox.y < 0 || cropBox.x + cropBox.width > videoWidth || cropBox.y + cropBox.height > videoHeight) {
-            alert("裁剪框超出视频范围，请调整裁剪框。");
             return;
         }
 
@@ -105,9 +94,10 @@ function VideoTranscoder() {
             progressBar.style.backgroundColor = updateProgressBarColor(progress); // 更新进度条颜色
         });
         await ffmpeg.writeFile('input.mp4', await fetchFile(upload.files[0]));
-        messageRef.current.innerHTML += "<div>开始裁剪...</div>";
+        try{
+            messageRef.current.innerHTML += "<div>开始裁剪...</div>";
         
-        await ffmpeg.exec(['-i', 'input.mp4', '-vf', cropParams, 'output.mp4']);
+        await ffmpeg.exec(['-i', 'input.mp4', '-vf', cropParams, '-c:v', 'libx264', '-c:a', 'aac', '-preset', 'ultrafast', '-r', '30', '-b:v', '3000k' , 'output.mp4']);
         ffmpeg.off('progress');
 
         const data = await ffmpeg.readFile('output.mp4');
@@ -116,11 +106,32 @@ function VideoTranscoder() {
         loadingRef.current.style.display = "none";
         setProgress(100);
         messageRef.current.innerHTML += "<div>转码完成！</div>";
+        
         // 隐藏裁剪框
-        setCropBox({ x: 0, y: 0, width: 0, height: 0 });
+        setCropBox(null);
+        } catch (error) {
+            console.error("转码失败:", error);
+            messageRef.innerHTML += "<div>转码失败，请重试。</div>";
+        } finally {
+            ffmpegRef.current.off('progress');
+        }
     };
 
-/*************  ✨ Codeium AI 建议  *************/
+    const saveVideo = () => {
+        if (progress !== 100) {
+            alert("视频未转码完成，请等待转码完成后再保存。");
+            return;
+        }
+        const url = videoRef.current.src;
+        console.log(url, videoRef);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Cropped_Video.mp4';
+        a.click();
+    };
+
+
+/*************  document  *************/
     /**
      * 根据给定的进度值更新进度条颜色。
      *
@@ -144,7 +155,7 @@ function VideoTranscoder() {
     const selectCrop = (option) => {
         const video = videoRef.current;
         const videoRect = video.getBoundingClientRect(); // 获取视频的宽高
-    
+        console.log(videoRect);
         // 根据视频的实际宽高调整裁剪框尺寸
         const { width: videoWidth, height: videoHeight } = videoRect;
     
@@ -184,21 +195,21 @@ function VideoTranscoder() {
             default:
                 return;
         }
-         // 确保裁剪框在视频区域内
-        const newX = Math.max(0, Math.min((videoWidth - newWidth) / 2, videoWidth - newWidth));
-        const newY = Math.max(0, Math.min((videoHeight - newHeight) / 2, videoHeight - newHeight));
-
-            // 更新裁剪框的大小和位置，确保不超出视频区域
         setCropBox({
             x: Math.max(0, (videoWidth - newWidth) / 2),
             y: Math.max(0, (videoHeight - newHeight) / 2),
             width: newWidth,
             height: newHeight
         });
+
+            // 更新裁剪框的大小和位置，确保不超出视频区域
 };
 
     // 动态更新裁剪参数
     useEffect(() => {
+        if (cropBox === null) {
+            return
+        }
         const newCropParams = `crop=${cropBox.width}:${cropBox.height}:${cropBox.x}:${cropBox.y}`;
         setCropParams(newCropParams);
     }, [cropBox]);
@@ -254,33 +265,8 @@ function VideoTranscoder() {
     
     
 
-/*************  ✨ Codeium AI 建议  *************/
-    /**
-     * 根据鼠标移动事件更新裁剪框的宽度和高度。
-     *
-     * @param {MouseEvent} moveEvent - 鼠标移动事件。
-     * @return {void}
-     */
-/****  bot-28184203-86d9-4bfc-a752-b020f2e2149c  *****/
-    const handleMouseMoveResize = (moveEvent) => {
-        const containerRect = videoContainerRef.current.getBoundingClientRect();
-        const aspectRatio = cropBox.width / cropBox.height;
+
     
-        let newWidth = moveEvent.clientX - cropBox.x;
-        let newHeight = newWidth / aspectRatio;
-    
-        // 确保宽高不会超出容器的边界
-        newWidth = Math.min(newWidth, containerRect.width - cropBox.x);
-        newHeight = Math.min(newHeight, containerRect.height - cropBox.y);
-    
-        setCropBox(prev => ({
-            ...prev,
-            width: newWidth,
-            height: newHeight
-        }));
-    };
-    
-    // 监听鼠标调整大小，允许裁剪框的大小调整
     // 监听鼠标调整大小，允许裁剪框的大小调整
     const handleResize = (e) => {
         e.stopPropagation(); // 防止触发裁剪框移动事件
@@ -294,10 +280,9 @@ function VideoTranscoder() {
         const handleMouseMove = (moveEvent) => {
             const containerRect = videoContainerRef.current.getBoundingClientRect();
             const deltaX = moveEvent.clientX - startX;
-            const deltaY = moveEvent.clientY - startY;
+
     
             // 计算新的宽度和高度，始终保持等比例
-            const aspectRatio = initialWidth / initialHeight;
             let newWidth = initialWidth + deltaX;
             let newHeight = newWidth / aspectRatio;
             console.log(containerRect.height, containerRect.width);
@@ -311,6 +296,21 @@ function VideoTranscoder() {
             if (cropBox.x + newWidth > containerRect.width) {
                 newWidth = containerRect.width - cropBox.x;
                 newHeight = newWidth / aspectRatio;
+            }
+
+            // 检查是否已达到边界，限制调整方向
+            const widthAtBoundary = cropBox.x + newWidth <= containerRect.width;
+            const heightAtBoundary = cropBox.y + newHeight <= containerRect.height;
+
+            // 继续拖拉时，确保不超过边界
+            if (!widthAtBoundary) {
+                newWidth = containerRect.width - cropBox.x; // 限制宽度
+                newHeight = newWidth / aspectRatio; // 重新计算高度
+            }
+
+            if (!heightAtBoundary) {
+                newHeight = containerRect.height - cropBox.y; // 限制高度
+                newWidth = newHeight * aspectRatio; // 重新计算宽度
             }
     
             // 限制最小宽高，避免裁剪框消失
@@ -347,26 +347,83 @@ function VideoTranscoder() {
     
     
 
-/*************  ✨ Codeium AI Suggestion  *************/
     /**
      * 处理文件选择事件，更新视频源并重新加载视频。
      *
      * @param {Event} event - 文件选择事件
      * @return {void}
      */
-/****  bot-32ddae10-6912-4160-b373-6858a7cb83a1  *****/
     const handleFileSelect = (event) => {
         const file = event.target.files[0];
         if (file) {
             const fileUrl = URL.createObjectURL(file);
-            videoRef.current.src = fileUrl;  // 设置视频src
-            videoRef.current.load();         // 确保视频重新加载
+            const video = videoRef.current;
+    
+            // 设置视频src
+            video.src = fileUrl;
+    
+            // 确保视频重新加载
+            video.load();
+    
+            // 监听视频的 loadedmetadata 事件
+            video.addEventListener('loadedmetadata', () => {
+                // 获取视频的实际宽高
+                const videoWidth = video.videoWidth;
+                const videoHeight = video.videoHeight;
+    
+                // 设置视频元素的宽高
+                video.width = videoWidth;
+                video.height = videoHeight;
+    
+                // 释放对象 URL
+                video.addEventListener('ended', () => {
+                    URL.revokeObjectURL(fileUrl);
+                });
+    
+                // 更新状态，表示视频已选择
+                setIsVideoSelected(true);
+    
+                // 设置裁剪框为 1:1 比例
+                const containerRect = videoContainerRef.current.getBoundingClientRect();
+                const containerWidth = containerRect.width;
+                const containerHeight = containerRect.height;
+                const newSize = Math.min(containerWidth, containerHeight) * 0.8; // 例如，设置为容器大小的80%
+    
+                // 计算裁剪框的位置，使其居中
+                const x = (containerWidth - newSize) / 2;
+                const y = (containerHeight - newSize) / 2;
+    
+                // 更新裁剪框的大小和位置
+                setCropBox({
+                    x: x,
+                    y: y,
+                    width: newSize,
+                    height: newSize
+                });
+            });
         }
     };
     
 
     return (
-        <div className="container">
+        <body>
+            <div>
+                {/* 裁剪比例按钮 */}
+                {isVideoSelected && (
+                    <div className="crop-options">
+                        {Object.keys(cropOptions).map((option) => (
+                            <button
+                                key={option}
+                                onClick={() => selectCrop(option)}
+                                className={`aspect-${option.replace(':', '-')}`}
+                            >
+                                {option}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+            <div className="container">
             <h1>视频转码器</h1>
     
             {!loaded ? (
@@ -374,7 +431,7 @@ function VideoTranscoder() {
             ) : (
                 <>
                     <h2>组件已加载</h2>
-                    <label htmlFor="upload">上传视频文件</label>
+                    <label htmlFor="upload">
                     <input
                         type="file"
                         id="upload"
@@ -382,7 +439,10 @@ function VideoTranscoder() {
                         className="upload-btn"
                         onChange={handleFileSelect}  // 添加文件选择事件处理
                     />
-                    <button onClick={transcode}>裁剪视频</button>
+                    {isVideoSelected && (<button onClick={transcode}>裁剪视频</button>)}
+                    {isVideoSelected && <button onClick={saveVideo}>下载视频</button>}
+                    </label>
+                    
     
                     <div ref={loadingRef} style={{ display: 'none' }}>处理中，请稍候...
                         <div className='progress_text'>
@@ -405,12 +465,12 @@ function VideoTranscoder() {
                     </div>
                     
     
-                    <div ref={videoContainerRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
+                    <div ref={videoContainerRef} style={{ display: 'flex', position: 'relative', justifyContent: 'center'}}>
                         {/* 视频标签 */}
-                        <video ref={videoRef} controls className="video-player" style={{ width: '100%', height: '100%' }} />
+                        <video ref={videoRef} controls className="video-player" />
     
                         {/* 裁剪框 */}
-                        {cropBox && (
+                        {cropBox && isVideoSelected && (
                             <div
                                 className="crop-box"
                                 style={{
@@ -443,21 +503,10 @@ function VideoTranscoder() {
     
                     <p ref={messageRef}></p>
     
-                    {/* 裁剪比例按钮 */}
-                    <div className="crop-options">
-                        {Object.keys(cropOptions).map((option) => (
-                            <button
-                                key={option}
-                                onClick={() => selectCrop(option)}
-                                className={`aspect-${option.replace(':', '-')}`}
-                            >
-                                {option}
-                            </button>
-                        ))}
-                    </div>
                 </>
             )}
-        </div>
+            </div>
+        </body>
     );
     
 }

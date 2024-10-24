@@ -64,15 +64,13 @@ button, input[type="file"] {
 
 .upload-btn {
     display: inline-block;
-    margin: 20px;
     font-size: 14px;
-    padding: 8px;
     border: 1px solid #ccc;
     border-radius: 5px;
     cursor: pointer;
     text-align: center;
     justify-content: center; /* 水平居中 */
-    align-items: center;     /* 垂直居中 */
+    pointer-events: none;
 }
 
 button:hover {
@@ -196,14 +194,12 @@ progress::-moz-progress-bar {
 
 .video-player {
     display: inline;
+    max-width: 100%;
+    height: auto;
+    
 }
 
 .progress_text{
     display: flex;
     justify-content: flex-start;
-}
-
-.crop-container{
-    display: inline;
-    padding-right: 1px;
 }
