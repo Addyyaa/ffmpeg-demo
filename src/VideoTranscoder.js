@@ -28,6 +28,13 @@ function VideoTranscoder() {
     const saveButton = document.getElementById('saveButton');
 
 
+    /**
+     * 从给定的 URL 创建一个 blob URL。
+     *
+     * @param {string} url - 要获取并转换为 blob URL 的 URL。
+     * @param {string} type - blob 的类型（在此实现中未使用）。
+     * @return {string} 返回的 blob URL。
+     */
     const toBlobURL = async (url, type) => {
         const response = await fetch(url);
         const blob = await response.blob();
@@ -470,7 +477,7 @@ function VideoTranscoder() {
                         <video ref={videoRef} controls className="video-player" />
     
                         {/* 裁剪框 */}
-                        {cropBox && isVideoSelected && (
+                        {cropBox !== null && isVideoSelected && (
                             <div
                                 className="crop-box"
                                 style={{
