@@ -26,6 +26,7 @@ function VideoTranscoder() {
     const [isDragging, setIsDragging] = useState(false);
     const [isVideoSelected, setIsVideoSelected] = useState(false);
     const saveButton = document.getElementById('saveButton');
+    const inputRef = useRef(null); // 添加input的引用，用来解决重复选择一个文件不触发input的onChange事件
 
 
     /**
@@ -109,11 +110,13 @@ function VideoTranscoder() {
 
         const data = await ffmpeg.readFile('output.mp4');
         videoRef.current.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+        console.log("转码后的视频 URL:", videoRef.current.src);
 
         loadingRef.current.style.display = "none";
         setProgress(100);
+        console.log("progress: ", progress)
         messageRef.current.innerHTML += "<div>转码完成！</div>";
-        
+        inputRef.current.value = ''; // 清空文件输入的值，以便再次选择相同文件时能够触发onChange
         // 隐藏裁剪框
         setCropBox(null);
         } catch (error) {
@@ -214,7 +217,7 @@ function VideoTranscoder() {
 
     // 动态更新裁剪参数
     useEffect(() => {
-        if (cropBox === null) {
+        if (progress == 100) {
             return
         }
         const newCropParams = `crop=${cropBox.width}:${cropBox.height}:${cropBox.x}:${cropBox.y}`;
@@ -364,8 +367,9 @@ function VideoTranscoder() {
         const file = event.target.files[0];
         if (file) {
             const fileUrl = URL.createObjectURL(file);
+            console.log('选择文件的url：', fileUrl)
             const video = videoRef.current;
-    
+            setProgress(0)
             // 设置视频src
             video.src = fileUrl;
     
@@ -389,27 +393,31 @@ function VideoTranscoder() {
     
                 // 更新状态，表示视频已选择
                 setIsVideoSelected(true);
-    
-                // 设置裁剪框为 1:1 比例
-                const containerRect = videoContainerRef.current.getBoundingClientRect();
-                const containerWidth = containerRect.width;
-                const containerHeight = containerRect.height;
-                const newSize = Math.min(containerWidth, containerHeight) * 0.8; // 例如，设置为容器大小的80%
-    
-                // 计算裁剪框的位置，使其居中
-                const x = (containerWidth - newSize) / 2;
-                const y = (containerHeight - newSize) / 2;
-    
-                // 更新裁剪框的大小和位置
-                setCropBox({
-                    x: x,
-                    y: y,
-                    width: newSize,
-                    height: newSize
-                });
+                console.log('393=>', progress)
+                if (progress != 100) {
+                    // 设置裁剪框为 1:1 比例
+                    const containerRect = videoContainerRef.current.getBoundingClientRect();
+                    const containerWidth = containerRect.width;
+                    const containerHeight = containerRect.height;
+                    const newSize = Math.min(containerWidth, containerHeight) * 0.8; // 例如，设置为容器大小的80%
+        
+                    // 计算裁剪框的位置，使其居中
+                    const x = (containerWidth - newSize) / 2;
+                    const y = (containerHeight - newSize) / 2;
+        
+                    // 更新裁剪框的大小和位置
+                    setCropBox({
+                        x: x,
+                        y: y,
+                        width: newSize,
+                        height: newSize
+                            })
+                }
+                ;
             });
         }
     };
+
     
 
     return (
@@ -445,6 +453,7 @@ function VideoTranscoder() {
                         accept="video/*"
                         className="upload-btn"
                         onChange={handleFileSelect}  // 添加文件选择事件处理
+                        ref={inputRef} // 将input元素与引用绑定
                     />
                     {isVideoSelected && (<button onClick={transcode}>裁剪视频</button>)}
                     {isVideoSelected && <button onClick={saveVideo}>下载视频</button>}
@@ -477,7 +486,7 @@ function VideoTranscoder() {
                         <video ref={videoRef} controls className="video-player" />
     
                         {/* 裁剪框 */}
-                        {cropBox !== null && isVideoSelected && (
+                        {progress != 100 && isVideoSelected && (
                             <div
                                 className="crop-box"
                                 style={{
