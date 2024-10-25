@@ -1,6 +1,6 @@
 
 
-body {
+.Cropper {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
     color: #333;
@@ -10,6 +10,18 @@ body {
     justify-content: center; /* 水平居中 */
     align-items: center; /* 垂直居中 */
     height: 100%; /* 让 body 的高度为视口高度 */
+}
+
+.crop-button{
+    display: flex;
+}
+
+.crop-options{
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    gap: 10px;
+    flex: 1 1 50%;
 }
 
 .container {
@@ -27,9 +39,6 @@ h1 {
     margin: 10px 0;
 }
 
-button {
-    margin: 20px 0; /* 增加按钮的上下间距 */
-}
 
 input[type="file"] {
     margin-bottom: 20px; /* 确保文件选择框和按钮之间有足够间距 */
@@ -44,9 +53,8 @@ video {
 }
 
 button, input[type="file"] {
-
+    margin: 20px 0; /* 增加按钮的上下间距 */
     display: flex; /* 按钮和输入框占据一整行 */
-    margin: 20px auto; /* 上下间距 */
     padding: 10px;
     font-size: 16px;
     width: 100%; /* 自适应宽度 */
@@ -119,6 +127,7 @@ progress::-moz-progress-bar {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    padding-right: 20px;
 }
 
 .crop-box {
