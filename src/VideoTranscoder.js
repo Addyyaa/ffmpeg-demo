@@ -16,9 +16,11 @@ function VideoTranscoder() {
     const [loaded, setLoaded] = useState(false);
     const [progress, setProgress] = useState(0);
     const [cropParams, setCropParams] = useState('crop=1280:720:0:0'); // 默认裁剪参数
+    const [real_resolution, setReal_resolution] = useState('');
     const [cropBox, setCropBox] = useState({ x: 0, y: 0, width: 100, height: 100});
     const ffmpegRef = useRef(new FFmpeg());
     const videoRef = useRef(null);
+    const cropButtonRef = useRef(null);
     const messageRef = useRef(null);
     const loadingRef = useRef(null);
     const videoContainerRef = useRef(null); // 视频容器的引用
@@ -44,13 +46,13 @@ function VideoTranscoder() {
 
     // 裁剪比例配置
     const cropOptions = {
-        "16:10": "crop=1152:720:10:10",
-        "10:16": "crop=720:1152:10:10",
-        "16:9": "crop=1280:720:10:10",
-        "9:16": "crop=720:1280:10:10",
-        "4:3": "crop=960:720:10:10",
-        "3:4": "crop=720:960:10:10",
-        "1:1": "crop=720:720:10:10",
+        "16:10": "1152:720",
+        "10:16": "720:1152",
+        "16:9": "1280:720",
+        "9:16": "720:1280",
+        "4:3": "960:720",
+        "3:4": "720:960",
+        "1:1": "720:720",
         "自由裁剪": "自由裁剪参数"
     };
 
@@ -90,35 +92,41 @@ function VideoTranscoder() {
             alert("请先上传一个视频文件。");
             return;
         }
-
         loadingRef.current.style.display = "block";
+        // 获取视频帧率
+        const probeResult = await ffmpeg.exec(['-i', 'input.mp4', '-select_streams', 'v:0', '-show_entries', 'stream=r_frame_rate', '-of', 'csv=p=0'])
+        console.log("probeResult: ", probeResult);
         setProgress(0);
         ffmpeg.on('progress', ({ progress, time }) => {
             const progressValue = progress * 100;
             console.log("Current progress:", progress);
             // messageRef.current.innerHTML = ${(progress * 100).toFixed(2)} % (transcoded time: ${time / 1000000} s);
             setProgress(progressValue);
-            const progressBar = document.querySelector('progress');
+            const progressBar = document.querySelector('progress'); 
             progressBar.style.backgroundColor = updateProgressBarColor(progress); // 更新进度条颜色
         });
         await ffmpeg.writeFile('input.mp4', await fetchFile(upload.files[0]));
         try{
             messageRef.current.innerHTML += "<div>开始裁剪...</div>";
-        
-        await ffmpeg.exec(['-i', 'input.mp4', '-vf', cropParams, '-c:v', 'libx264', '-c:a', 'aac', '-preset', 'ultrafast', '-r', '30', '-b:v', '3000k' , 'output.mp4']);
-        ffmpeg.off('progress');
+            // 监听日志事件
+            // ffmpeg.on('log', ({ type, message }) => {
+            //     console.log(`FFmpeg ${type}: ${message}`);
+            // });
+            // console.log("cropParams: ", cropParams);
+            await ffmpeg.exec(['-i', 'input.mp4', '-vf', cropParams, '-c:v', 'libx264', '-c:a', 'copy', '-preset', 'ultrafast', '-r', '30', '-b:v', '3000k' , 'output.mp4']);
+            ffmpeg.off('progress');
 
-        const data = await ffmpeg.readFile('output.mp4');
-        videoRef.current.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
-        console.log("转码后的视频 URL:", videoRef.current.src);
+            const data = await ffmpeg.readFile('output.mp4');
+            videoRef.current.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+            console.log("转码后的视频 URL:", videoRef.current.src);
 
-        loadingRef.current.style.display = "none";
-        setProgress(100);
-        console.log("progress: ", progress)
-        messageRef.current.innerHTML += "<div>转码完成！</div>";
-        inputRef.current.value = ''; // 清空文件输入的值，以便再次选择相同文件时能够触发onChange
-        // 隐藏裁剪框
-        setCropBox(null);
+            loadingRef.current.style.display = "none";
+            setProgress(100);
+            console.log("progress: ", progress)
+            messageRef.current.innerHTML += "<div>转码完成！</div>";
+            inputRef.current.value = ''; // 清空文件输入的值，以便再次选择相同文件时能够触发onChange
+            // 隐藏裁剪框
+            setCropBox(null);
         } catch (error) {
             console.error("转码失败:", error);
             messageRef.innerHTML += "<div>转码失败，请重试。</div>";
@@ -162,15 +170,16 @@ function VideoTranscoder() {
      * @return {void}
      */
 /****  bot-0394ff2d-88b6-4c1e-8676-b0c0bd738ce9  *****/
-    const selectCrop = (option) => {
+    const selectCrop = ([option, value]) => {
         const video = videoRef.current;
         const videoRect = video.getBoundingClientRect(); // 获取视频的宽高
         console.log(videoRect);
         // 根据视频的实际宽高调整裁剪框尺寸
         const { width: videoWidth, height: videoHeight } = videoRect;
-    
+        setReal_resolution(value);
+        console.log('174-', real_resolution)
         let newWidth, newHeight;
-    
+        console.log('173-option', option);
         switch (option) {
             case "16:10":
                 newWidth = videoWidth * 0.9;
@@ -220,8 +229,26 @@ function VideoTranscoder() {
         if (progress == 100) {
             return
         }
-        const newCropParams = `crop=${cropBox.width}:${cropBox.height}:${cropBox.x}:${cropBox.y}`;
-        setCropParams(newCropParams);
+        const container = videoRef.current;
+        // console.log('container', container);
+        if (container != null && container != undefined) {
+            const containerRect = container.getBoundingClientRect();
+            let video_container_width = containerRect.width;
+            let video_container_height = containerRect.height;
+            let x_cooder = Math.floor(cropBox.x * container.width / video_container_width);
+            let y_cooder = Math.floor(cropBox.y * container.height / video_container_height);
+            let x_width = Math.floor(cropBox.width * container.width / video_container_width);
+            let y_height = Math.floor(cropBox.height * container.height / video_container_height);
+            // console.log('CropParams=>', cropParams);
+            // console.log('video_container_width', video_container_width, 'video_container_height', video_container_height);
+            // console.log('container.width', container.width, 'container.height', container.height);
+            // console.log("真实的裁剪坐标及尺寸:", "x_cooder-", x_cooder, "y_cooder-",y_cooder, cropParams);
+            // console.log("裁剪框的宽高:", cropBox.width, cropBox.height);
+            // console.log('crop=${cropBox.width}:${cropBox.height}:${cropBox.x}:${cropBox.y}', `crop=${cropBox.width}:${cropBox.height}:${cropBox.x}:${cropBox.y}`)
+            const newCropParams = `crop=${x_width}:${y_height}:${x_cooder}:${y_cooder},scale=${real_resolution}`;
+            console.log("newCropParams=>", newCropParams, 'real_resolution', real_resolution);
+            setCropParams(newCropParams);
+        }
     }, [cropBox]);
 
     // 监听鼠标按下，允许裁剪框的移动
@@ -364,6 +391,7 @@ function VideoTranscoder() {
      * @return {void}
      */
     const handleFileSelect = (event) => {
+        setCropParams('');
         const file = event.target.files[0];
         if (file) {
             const fileUrl = URL.createObjectURL(file);
@@ -381,11 +409,11 @@ function VideoTranscoder() {
                 // 获取视频的实际宽高
                 const videoWidth = video.videoWidth;
                 const videoHeight = video.videoHeight;
-    
+                console.log('视频的实际宽高：', videoWidth, videoHeight)
                 // 设置视频元素的宽高
                 video.width = videoWidth;
                 video.height = videoHeight;
-    
+
                 // 释放对象 URL
                 video.addEventListener('ended', () => {
                     URL.revokeObjectURL(fileUrl);
@@ -395,6 +423,7 @@ function VideoTranscoder() {
                 setIsVideoSelected(true);
                 console.log('393=>', progress)
                 if (progress != 100) {
+                    setReal_resolution('720:720')
                     // 设置裁剪框为 1:1 比例
                     const containerRect = videoContainerRef.current.getBoundingClientRect();
                     const containerWidth = containerRect.width;
@@ -425,11 +454,11 @@ function VideoTranscoder() {
             <div className="crop-button">
                 {/* 裁剪比例按钮 */}
                 {isVideoSelected && (
-                    <div className="crop-options">
-                        {Object.keys(cropOptions).map((option) => (
+                    <div ref={cropButtonRef} className="crop-options">
+                        {Object.entries(cropOptions).map(([option, value]) => (
                             <button
                                 key={option}
-                                onClick={() => selectCrop(option)}
+                                onClick={() => selectCrop([option, value])}
                                 className={`aspect-${option.replace(':', '-')}`}
                             >
                                 {option}
