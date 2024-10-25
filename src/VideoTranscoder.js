@@ -413,8 +413,8 @@ function VideoTranscoder() {
     
 
     return (
-        <body>
-            <div>
+        <div className="Cropper">
+            <div className="crop-button">
                 {/* 裁剪比例按钮 */}
                 {isVideoSelected && (
                     <div className="crop-options">
@@ -513,7 +513,7 @@ function VideoTranscoder() {
                 </>
             )}
             </div>
-        </body>
+        </div>
     );
     
 }
