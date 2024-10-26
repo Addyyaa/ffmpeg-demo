@@ -1,4 +1,7 @@
-
+.body{
+    user-select: none;
+    -webkit-user-select: none;
+}
 
 .Cropper {
     font-family: Arial, sans-serif;
@@ -14,6 +17,8 @@
 
 .crop-button{
     display: flex;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .crop-options{
@@ -22,6 +27,8 @@
     flex-direction: row;
     gap: 10px;
     flex: 1 1 50%;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .container {
@@ -205,7 +212,8 @@ progress::-moz-progress-bar {
     display: inline;
     max-width: 100%;
     height: auto;
-    
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .progress_text{
