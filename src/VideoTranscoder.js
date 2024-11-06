@@ -115,16 +115,17 @@ function VideoTranscoder() {
             '-hide_banner'  // 隐藏不必要的输出
           ]);
         
+          console.log('视频信息:', outputLog);
         // 提取信息方法
         const extractFrame_Duration = (info) => {
-            const frame = info.match(/(\d+)\s+fps/);
+            const frame = info.match(/(\d+\.*\d+)\s*fps/); // 匹配浮点数帧率
             const duration = info.match(/Duration:\s+(\d{2}:\d{2}:\d{2}\.\d{2})/);
             return [frame[1], duration[1]];
         }
         let info = extractFrame_Duration(outputLog);
         let frameRate = info[0];
         let duration = info[1];
-        console.log('视频信息:', '帧率:', frameRate, '时长:', duration);
+        console.log('视频信息:', '帧率:', frameRate, '时长:', duration, 'info:', info, );
 
         if (frameRate > 30) {
             frameRate = 30;
